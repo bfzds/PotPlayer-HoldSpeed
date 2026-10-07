@@ -35,6 +35,8 @@ logFile := A_ScriptDir "\PotPlayer-HoldSpeed.log"
 Log(msg) {
     FileAppend("[" FormatTime(A_Now, "yyyy-MM-dd HH:mm:ss") "] " msg "`n", logFile, "UTF-8")
 }
+; 退出留痕: 任务管理器强杀/安全软件拦截不会触发此回调, 日志因此能区分"自己退出"和"被外部杀死"
+OnExit((reason, code) => Log("脚本退出: " reason))
 
 ; --- 启动逻辑 ---
 takeover := followPotPlayer || (A_Args.Length && A_Args[1] = "/follow")
