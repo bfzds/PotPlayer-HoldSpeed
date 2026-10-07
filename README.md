@@ -35,6 +35,10 @@ zTasker 的任务执行器会在**任务结束时回收它启动的子进程**�
 AutoHotkey 的 UX 启动器（文件关联链路）对中文用户名路径（如 `C:\Users\<中文名>\...`）兼容性差，
 实测会出现"启动成功但进程静默消失"。建议整个项目放在 `C:\AHK` 这类纯 ASCII 路径下。
 
+## 兼容性
+
+Windows 10 与 Windows 11 均可使用（作者在 Win11 25H2 实测；链路中用到的 AutoHotkey v2、zTasker、任务计划程序、PotPlayer 64 位在 Win10 上行为一致）。
+
 ## 安装
 
 ### 前置依赖
@@ -52,6 +56,8 @@ AutoHotkey 的 UX 启动器（文件关联链路）对中文用户名路径（�
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\register-scheduled-task.ps1
 ```
+
+注册脚本已内置三处关键覆盖：**允许电池供电时启动、切换电池不终止任务、取消 72 小时执行时限**——任务计划程序的默认电池策略是为一次性维护作业设计的，笔记本切到电池供电的瞬间会终止常驻脚本（表现为脚本无声消失、日志无任何退出记录），不覆盖必踩。
 
 **3. zTasker 新建任务**：
 
@@ -97,6 +103,7 @@ RunWait(A_ComSpec ' /c schtasks /Run /TN "PotPlayerHoldSpeed"', , "Hide")
 | 变速数值不对 | 确认 PotPlayer "速度调整单位" 是否为 0.1，并同步 `speedStep` |
 | 打开 PotPlayer 后脚本没被拉起 | 依次检查：zTasker 是否在运行并加载了任务 → 手动执行 `schtasks /Run /TN "PotPlayerHoldSpeed"` 是否拉起脚本 → 查看 `PotPlayer-HoldSpeed.log` |
 | 长按无任何反应 | 确认脚本在运行（托盘 H 图标）且 PotPlayer 是前台窗口 |
+| 笔记本上脚本无声消失 / 电池供电时不启动 | 任务计划程序的默认电池策略所致，重跑 `register-scheduled-task.ps1` 即可（已内置覆盖） |
 
 ## 参考 / 致谢
 

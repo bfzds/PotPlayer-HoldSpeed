@@ -1,4 +1,4 @@
-# 注册中转计划任务 "PotPlayerHoldSpeed"
+﻿# 注册中转计划任务 "PotPlayerHoldSpeed"
 # 用途: 供 zTasker 的引导脚本通过 schtasks /Run 拉起, 由系统服务在 zTasker 进程树之外启动常驻脚本
 # 以当前用户身份运行即可, 无需管理员; 重复执行会覆盖旧注册
 #
@@ -27,7 +27,14 @@ if (-not (Test-Path $ahkScript)) {
 
 $action  = New-ScheduledTaskAction -Execute $ahkExe -Argument "`"$ahkScript`""
 $trigger = New-ScheduledTaskTrigger -Once -At "2020-01-01T00:00:00"   # 不会自动触发的占位时间, 只供手动 /Run
-Register-ScheduledTask -TaskName "PotPlayerHoldSpeed" -Action $action -Trigger $trigger `
+
+# 关键: 覆盖任务计划程序的默认电源/时限策略。
+# 默认值(禁止电池启动、切换电池即终止、72小时执行时限)是为一次性维护作业设计的,
+# 对常驻脚本是致命的: 笔记本切到电池供电的瞬间, 常驻脚本会被任务计划程序直接终止, 不留任何日志。
+$settings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+    -ExecutionTimeLimit ([TimeSpan]::Zero) -MultipleInstances IgnoreNew
+
+Register-ScheduledTask -TaskName "PotPlayerHoldSpeed" -Action $action -Trigger $trigger -Settings $settings `
     -Description "PotPlayer hold-speed broker (started via schtasks /Run by zTasker)" -Force |
     Select-Object TaskName, State
 
